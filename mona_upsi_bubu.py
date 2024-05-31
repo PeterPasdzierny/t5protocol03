@@ -3,13 +3,11 @@ import numpy as np
 from scipy import constants 
 
 kb = constants.Boltzmann
-ev_to_j = 1.6022e-19
-j_to_ev = constants.electron_volt
-print(j_to_ev)
-6.242e18
+ev_to_j = constants.electron_volt
+j_to_ev = 6.242e18
 kelvin = 273.15
 h = constants.Planck
-
+c = constants.c
 
 
 
@@ -40,7 +38,6 @@ plt.xlabel('$E_{trl}$ [eV]')
 plt.ylabel('$N_{mol}$')
 plt.grid()
 plt.legend()
-
 plt.show()
 
 
@@ -66,9 +63,7 @@ for i,m in enumerate(masses):
         print(f'Most probable velocity for {mass_names[i]} is {speed[np.argmax(nmol_v)]} ms⁻¹')
 
         e_diff = (m/2 * 615**2)- e_mol[[np.argmax(nmol_v)]]
-        lam = (615-speed[np.argmax(nmol_v)])*h/e_diff
-        print(n_mol(373.15, m/2 * 615**2))
-
+        lam = (c)*h/e_diff
 
 
 plt.xlabel('$v$ [ms⁻¹]')
@@ -78,4 +73,4 @@ plt.legend()
 
 plt.show()
 
-print(lam*1e9)
+print(f'The ozon photon will have an energy of {lam*1e9} nm.')
