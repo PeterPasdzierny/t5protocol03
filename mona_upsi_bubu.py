@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
-from scipy import constants 
+from scipy import constants, integrate
+import sympy as sp
 
 kb = constants.Boltzmann
 ev_to_j = constants.electron_volt
@@ -8,6 +9,7 @@ j_to_ev = 6.242e18
 kelvin = 273.15
 h = constants.Planck
 c = constants.c
+h_quer = constants.hbar
 
 
 
@@ -17,11 +19,28 @@ def n_mol(T, emol):
     n_mol = a * b
     return n_mol
 
+def n_mol_tilde(T, emol):
+    a = np.exp((-emol) / (kb * T))
+    f = sp.exp((-x) / (kb * T))
+    integral = sp.integrate(f, (x, 0, sp.oo))
+    n_mol_tilde = a/integral
+    return n_mol_tilde
+
+def E_rot(n_rot):
+    
+    E =  (n_rot-h_quer)**2/(2*I)
+
+
+x = sp.symbols('x')
+f = sp.exp((-x) / (kb * 273.15))
+integral = sp.integrate(f, (x, 0, sp.oo))
+
 
 e_mol = np.linspace(0, 0.2, 101) * ev_to_j
 temps = [-50 + kelvin, 0 + kelvin, 100 + kelvin]
 masses = np.array([1.604e-2, 4.8e-2])/constants.Avogadro
 speed = (2*e_mol/(masses[0]))**0.5
+
 
 
 
@@ -38,15 +57,17 @@ plt.xlabel('$E_{trl}$ [eV]')
 plt.ylabel('$N_{mol}$')
 plt.grid()
 plt.legend()
-plt.show()
+#plt.show()
 
 
 
 linestyles = ['solid', 'dashed']
 colors = ['tab:blue', 'tab:orange', 'tab:green']
 mass_names = ['Methane', 'Ozone']
-plt.figure()
 
+
+
+plt.figure()
 
 for i,m in enumerate(masses):
     e_mol =  m/2 * speed**2 
@@ -71,6 +92,33 @@ plt.ylabel('$N_{mol}$')
 plt.grid()
 plt.legend()
 
-plt.show()
+#plt.show()
 
 print(f'The ozon photon will have an energy of {lam*1e9} nm.')
+
+
+
+plt.figure()
+
+for t in temps:
+    nmol_T = n_mol_tilde(t, e_mol)
+    plt.plot(e_mol * j_to_ev, nmol_T, label=f"T = {t-kelvin:.0f} °C") 
+
+plt.xlabel('$E$ [eV]')
+plt.ylabel('$N_{mol}$')
+plt.xscale('log')
+plt.grid()
+plt.legend()
+plt.show()
+
+
+
+plt.figure()
+
+
+plt.xlabel('$E$ [eV]')
+plt.ylabel('$N_{mol}$')
+plt.xscale('log')
+plt.grid()
+plt.legend()
+plt.show()
