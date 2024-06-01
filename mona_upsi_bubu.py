@@ -10,7 +10,8 @@ kelvin = 273.15
 h = constants.Planck
 c = constants.c
 h_quer = constants.hbar
-
+r = 116e-12
+n_rots = [20,30]
 
 
 def n_mol(T, emol):
@@ -22,13 +23,14 @@ def n_mol(T, emol):
 def n_mol_tilde(T, emol):
     a = np.exp((-emol) / (kb * T))
     f = sp.exp((-x) / (kb * T))
-    integral = sp.integrate(f, (x, 0, sp.oo))
+    integral = sp.integrate(f, (x, 0, sp.oo))#
     n_mol_tilde = a/integral
     return n_mol_tilde
 
 def E_rot(n_rot):
-    
+    I = masses[0]*masses[1]/(masses[0]+masses[1])*r
     E =  (n_rot-h_quer)**2/(2*I)
+    return E
 
 
 x = sp.symbols('x')
@@ -57,7 +59,7 @@ plt.xlabel('$E_{trl}$ [eV]')
 plt.ylabel('$N_{mol}$')
 plt.grid()
 plt.legend()
-#plt.show()
+
 
 
 
@@ -92,7 +94,7 @@ plt.ylabel('$N_{mol}$')
 plt.grid()
 plt.legend()
 
-#plt.show()
+
 
 print(f'The ozon photon will have an energy of {lam*1e9} nm.')
 
@@ -109,16 +111,17 @@ plt.ylabel('$N_{mol}$')
 plt.xscale('log')
 plt.grid()
 plt.legend()
-plt.show()
+#plt.show()
 
 
 
-plt.figure()
 
+for i, n_rot in enumerate(n_rots):
+    
+    E = E_rot(n_rot)
+    
+    nmol_T_dif = n_mol_tilde(273.15, E)- n_mol_tilde(373.15, E)
+   
+    print(f'The difference for {mass_names[i]} is {nmol_T_dif}.')
+        
 
-plt.xlabel('$E$ [eV]')
-plt.ylabel('$N_{mol}$')
-plt.xscale('log')
-plt.grid()
-plt.legend()
-plt.show()
