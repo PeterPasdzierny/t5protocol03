@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import matplotlib as mpl
 import numpy as np
 from scipy import constants, integrate
 import sympy as sp
@@ -48,11 +49,15 @@ def E_orb(n_orb):
 
 
 def E_rot(n_rot, I):
-    return n_rot * (n_rot + 1) * h**2 / (8 * np.pi**2 * I)
+    return (n_rot * (n_rot + 1) * h**2) / (8 * np.pi**2 * I)
 
 
 def E_vib(n_vib, nu_norm):
     return (n_vib + 0.5) * h * nu_norm
+
+
+def inertia(m, r):
+    return 0.5 * m * r**2
 
 
 # def n_mol_tilde(T, emol):
@@ -77,19 +82,22 @@ def E_vib(n_vib, nu_norm):
 # 1a
 e_mol = np.linspace(0, 0.2, 1001) * ev_to_j
 temps = [-50 + kelvin, 0 + kelvin, 100 + kelvin]
+colors = ["tab:blue", "tab:green", "tab:orange"]
 
 plt.figure()
+plt.ticklabel_format(axis="y", style="sci", useMathText=True)
 
-for t in temps:
+for t, clr in zip(temps, colors):
     nmol_T = n_mol(t, e_mol)
-    plt.plot(e_mol * j_to_ev, nmol_T, label=f"T = {t-kelvin:.0f} °C")
+    plt.plot(e_mol * j_to_ev, nmol_T, label=f"T = {t-kelvin:.0f} °C", color=clr)
 
 plt.xlim(0, 0.2)
 plt.ylim(0, 1.6e20)
-plt.xlabel("$E_{trl}$ [eV]")
-plt.ylabel("$N_{mol}$")
+plt.xlabel("$\mathrm{E}_{\mathrm{trl, trl}}$ [eV]")
+plt.ylabel("$\mathrm{N}_{\mathrm{mol}}$")
 plt.grid()
 plt.legend()
+# plt.savefig("./figures/part2ex1_1a.png", dpi=300)
 
 ############################################################
 
@@ -97,26 +105,29 @@ plt.legend()
 vels = np.linspace(0, 1500, 10001)
 masses = np.array([16.04e-3, 48e-3]) / n
 
-# linestyles = ["solid", "dashed"]
-# colors = ["tab:blue", "tab:orange", "tab:green"]
+linestyles = ["dashed", "solid"]
+colors = ["tab:blue", "tab:green", "tab:orange"]
 mass_names = ["Methane", "Ozone"]
 #
 plt.figure()
 
-for t in temps:
-    for m in masses:
+for t, clr in zip(temps, colors):
+    for m, lst in zip(masses, linestyles):
         nmol_T = n_mol_v(t, m, vels)
-        plt.plot(vels, nmol_T, label=f"T = {t-kelvin:.0f} °C")
+        plt.plot(vels, nmol_T, label=f"T = {t-kelvin:.0f} °C", color=clr, linestyle=lst)
         print(
             f"Most probable v for {list(mass_names)[list(masses).index(m)]} @ {t-kelvin} °C {get_v_max(t, m)}"
         )
 
 plt.xlim(0, 1500)
-# plt.ylim(0, 1.6e20)
-plt.xlabel("$v$ [m/s]")
-plt.ylabel("$N_{mol}$")
+plt.ylim(0, 0.0033)
+plt.xlabel("$\mathrm{v}$ [m/s]")
+plt.ylabel("$\mathrm{N}_{\mathrm{mol}}$")
 plt.grid()
-plt.legend()
+custom_labels = [f"T =  {t-kelvin:.0f} °C" for t in temps]
+legend_handles = [mpl.lines.Line2D([0], [0], color=color, lw=2) for color in colors]
+plt.legend(legend_handles, custom_labels, loc="upper right")
+# plt.savefig("./figures/part2ex1_1b.png", dpi=300)
 
 # 1c
 e_diff = masses[1] / 2 * (615**2 - get_v_max(temps[2], masses[1]) ** 2)
@@ -126,11 +137,16 @@ print(f"The ozon photon will have a wavelength of {lam*1e6} um.")
 #######################################################################
 
 # 2a
+temps = [-50 + kelvin, 0 + kelvin, 100 + kelvin]
+m_h2 = 1.67e-27
+r_h2 = 37e-10
+I_h2 = inertia(m_h2, r_h2)
+nu_norm_h2 = 1.34e14
 n_rot = np.linspace(0, 500, 1001)
-n_vib = np.linspace(0, 60, 1001)
+n_vib = np.linspace(0, 10, 1001)
 n_orb = np.linspace(1, 8, 1001)
-e_mol_rot = E_rot(n_rot, I=7.1501e-46)
-e_mol_vib = E_vib(n_vib, nu_norm=136600 * c)
+e_mol_rot = E_rot(n_rot, I_h2)
+e_mol_vib = E_vib(n_vib, nu_norm_h2)
 e_mol_orb = E_orb(n_orb)
 
 plt.figure()
@@ -142,24 +158,18 @@ for t in temps:
     plt.plot(e_mol_vib * j_to_ev, nmol_disc, label=f"T = {t-kelvin:.0f} °C", c="g")
     nmol_disc = n_mol_disc(t, e_mol_orb)
     plt.plot(
-        e_mol_orb * j_to_ev + 13.6, nmol_disc, label=f"T = {t-kelvin:.0f} °C", c="r"
+        e_mol_orb * j_to_ev,
+        nmol_disc,
+        label=f"T = {t-kelvin:.0f} °C",
+        c="r",
     )
 
 plt.xlabel("$E$ [eV]")
 plt.ylabel("$N_{mol}$")
-plt.xscale("log")
+# plt.xscale("log")
 plt.yscale("log")
 plt.grid()
 plt.legend()
-
-
-# for i, n_rot in enumerate(n_rots):
-#     E = E_rot(n_rot)
-#
-#     nmol_T_dif = n_mol_tilde(273.15, E) - n_mol_tilde(373.15, E)
-#
-#     print(f"The difference for {mass_names[i]} is {nmol_T_dif}.")
-
 
 plt.tight_layout()
 plt.show()
